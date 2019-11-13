@@ -28,10 +28,21 @@ public class StickHeaderContainer extends FrameLayout {
         headerPositionMap = new SparseIntArray();
     }
 
-    public void notifyPreviousHeaderMap(int previousPosition) {
+    public void putPreviousValue(int previousPosition) {
         // key:当前header  value: 当前header的前一个header
         headerPositionMap.put(getHeaderPosition(), previousPosition);
     }
+
+    public void notifyPreviousMap(int previousPosition) {
+        SparseIntArray cloneMap = headerPositionMap.clone();
+        for (int i = 0; i < cloneMap.size(); i++) {
+            int keyPrevious = headerPositionMap.keyAt(i);
+            if (keyPrevious >= previousPosition) {
+                headerPositionMap.delete(keyPrevious);
+            }
+        }
+    }
+
 
     /**
      * 记录当前headerView对应数据源中的位置

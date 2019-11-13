@@ -6,6 +6,7 @@
 
     <TextView
         android:id="@+id/tv_municipality"
+        style="@style/StyleRippleBorderless"
         android:layout_width="0dp"
         android:layout_height="44dp"
         android:background="@color/colorAccent"

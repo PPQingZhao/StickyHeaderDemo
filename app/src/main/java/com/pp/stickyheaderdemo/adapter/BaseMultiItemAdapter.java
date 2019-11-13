@@ -41,7 +41,7 @@ public class BaseMultiItemAdapter<T extends MultiItemEntity> extends RecyclerVie
 
     protected LayoutInflater getLayoutInflater(Context context) {
         if (null == mLayoutInflater) {
-            mLayoutInflater = LayoutInflater.from(context.getApplicationContext());
+            mLayoutInflater = LayoutInflater.from(context);
         }
         return mLayoutInflater;
     }

@@ -84,7 +84,7 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
                     mHeaderContainer.setHeaderPosition(position);
 
                     // 更新map , key:当前header  value: 当前header的前一个header
-                    mHeaderContainer.notifyPreviousHeaderMap(mHeaderContainer.getOldHeaderPosition());
+                    mHeaderContainer.putPreviousValue(mHeaderContainer.getOldHeaderPosition());
 
                     RecyclerView.ViewHolder holder = getHolder(mHeaderContainer.getHeaderPosition());
                     if (null != holder && null == holder.itemView.getParent()) {
@@ -94,8 +94,10 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
                 }
                 // 列表向下滚动
             } else if (!positiveDirection && top >= 0) {
+                Log.e(TAG, "position: " + position);
                 // 获取当前position header的 前一个header
                 int previousHeaderPosition = mHeaderContainer.getPreviousHeaderPosition(position);
+                Log.e(TAG, "previousHeaderPosition: " + previousHeaderPosition);
                 if (-1 != previousHeaderPosition
                         && previousHeaderPosition != mHeaderContainer.getHeaderPosition()) {
 

@@ -182,6 +182,7 @@ public class GridStickyHeaderActivity extends AppCompatActivity {
                                     int index = mAdapter.getDataList().indexOf(item);
                                     if (mAdapter.getDataList().remove(item)) {
                                         mAdapter.notifyItemRemoved(index);
+                                        mHeaderContainer.notifyPreviousMap(index);
                                         Toast.makeText(v.getContext(), "deleted " + city.getName(), Toast.LENGTH_SHORT).show();
                                     }
                                 }

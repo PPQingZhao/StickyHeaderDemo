@@ -108,11 +108,25 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
                 switch (viewType) {
                     case R.layout.rv_item_province:
                         TextView tv_province = itemView.findViewById(R.id.tv_province);
-                        tv_province.setText(((Province) item).getName());
+                        final Province province = (Province) item;
+                        tv_province.setText(province.getName());
+                        tv_province.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(v.getContext(), province.getName(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         break;
                     case R.layout.rv_item_municipality:
                         TextView tv_municipality = itemView.findViewById(R.id.tv_municipality);
-                        tv_municipality.setText(((Municipality) item).getName());
+                        final Municipality municipality = (Municipality) item;
+                        tv_municipality.setText(municipality.getName());
+                        tv_municipality.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(v.getContext(), municipality.getName(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         break;
                     case R.layout.rv_item_city:
                         TextView tv_city = itemView.findViewById(R.id.tv_city);
