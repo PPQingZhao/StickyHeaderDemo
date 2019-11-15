@@ -31,6 +31,7 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
     private StickyHeaderItemAdapter<StickyHeaderItem> mAdapter;
     private final List<StickyHeaderItem> dataList = new ArrayList<>();
     private StickHeaderContainer mHeaderContainer;
+    private StickyHeaderScrollerListener mHeaderScrollerListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +61,23 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
     }
 
     private void initData() {
+
+//        for (int i = 0; i < 250; i++) {
+//            if (i % 15 == 0) {
+//                Municipality municipality = new Municipality();
+//                municipality.setName("Municipality " + i);
+//                dataList.add(municipality);
+//            } else if (i % 12 == 0) {
+//                Province province = new Province();
+//                province.setName("Province " + i);
+//                dataList.add(province);
+//            } else {
+//                City city = new City();
+//                city.setName(" city " + i);
+//                dataList.add(city);
+//            }
+//        }
+
 
         for (int i = 0; i < 30; i++) {
             if (i % 3 == 0) {
@@ -113,7 +131,11 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
                         tv_province.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Toast.makeText(v.getContext(), province.getName(), Toast.LENGTH_SHORT).show();
+                                StickyHeaderItem remove = mAdapter.getDataList().remove(1);
+                                mAdapter.notifyItemRemoved(1);
+                                mHeaderScrollerListener.notifyPreviousRemove(1);
+//                                Toast.makeText(v.getContext(), "deleted " + ((City) remove).getName(), Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(v.getContext(), province.getName(), Toast.LENGTH_SHORT).show();
                             }
                         });
                         break;
@@ -138,6 +160,7 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
                                 int index = mAdapter.getDataList().indexOf(item);
                                 if (mAdapter.getDataList().remove(item)) {
                                     mAdapter.notifyItemRemoved(index);
+                                    mHeaderContainer.notifyPreviousRemove(index);
                                     Toast.makeText(v.getContext(), "deleted " + name, Toast.LENGTH_SHORT).show();
                                 }
                             }
@@ -151,9 +174,9 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
 
         mRecyclerView.setAdapter(mAdapter);
 
-        StickyHeaderScrollerListener headerScrollerListener = new StickyHeaderScrollerListener(mHeaderContainer);
-        headerScrollerListener.setHeaderAdapter(mAdapter);
-        mRecyclerView.addOnScrollListener(headerScrollerListener);
+        mHeaderScrollerListener = new StickyHeaderScrollerListener(mHeaderContainer);
+        mHeaderScrollerListener.setHeaderAdapter(mAdapter);
+        mRecyclerView.addOnScrollListener(mHeaderScrollerListener);
     }
 
 }

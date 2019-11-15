@@ -33,55 +33,24 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
             throw new RuntimeException("StickyHeaderAdapter must not be null.");
         }
 
-        // 判断第一个 view 是否是 headerView
-        int firstPosition = recyclerView.getChildAdapterPosition(recyclerView.getChildAt(0));
-        StickyHeader headerItem = mHeaderAdapter.getHeaderItem(firstPosition);
-        if (null != headerItem && headerItem.isHeader()) {
-            scrollStickyHeader(recyclerView, recyclerView.getChildAt(0), dy > 0);
-        } else {
-            View viewUnder = recyclerView.findChildViewUnder(mHeaderContainer.getMeasuredWidth() * 0.5f, mHeaderContainer.getMeasuredHeight());
-            if (null != viewUnder) {
-                scrollStickyHeader(recyclerView, viewUnder, dy > 0);
-            }
-        }
-    }
+        if (dy > 0) {
+            int headerHeight = mHeaderContainer.getMeasuredHeight();
+            // header top边下的view
+            View viewTop = recyclerView.findChildViewUnder(mHeaderContainer.getMeasuredWidth() * 0.5f, 1);
+            // 获取view 在列表中的位置
+            int positionTop = recyclerView.getChildAdapterPosition(viewTop);
+            StickyHeader topHeaderItem = mHeaderAdapter.getHeaderItem(positionTop);
+            boolean isHeaderTop = null != topHeaderItem && topHeaderItem.isHeader();
 
-    /**
-     * 滚动粘性头部
-     *
-     * @param positiveDirection 是否是正方向(竖直滚动,列表向上滚动为正方向)
-     */
-    private void scrollStickyHeader(RecyclerView parent, View child, boolean positiveDirection) {
-
-        // 获取view 在列表中的位置
-        int position = parent.getChildAdapterPosition(child);
-        StickyHeader headerItem = mHeaderAdapter.getHeaderItem(position);
-        if (null != headerItem && headerItem.isHeader()) {
-            int top = child.getTop();
-
-            // 到达recyclerview 顶部
-            if (0 == position && 0 == top) {
-                // 获取当前 header的 前一个header
-                int previousHeaderPosition = mHeaderContainer.getPreviousHeaderPosition(mHeaderContainer.getHeaderPosition());
-                if (0 == previousHeaderPosition) {
-                    // 更新当前header 记录
-                    mHeaderContainer.setHeaderPosition(position);
-
-                    RecyclerView.ViewHolder holder = getHolder(mHeaderContainer.getHeaderPosition());
-                    if (null != holder && null == holder.itemView.getParent()) {
-                        // 更新headerview
-                        addHeaderView(holder);
-                    }
-                }
-                // 列表向上滚动
-            } else if (positiveDirection && top < 0) {
-                if (position != mHeaderContainer.getHeaderPosition()) {
+            // header交换时机: viewTop是header 并且 viewTop.getTop() <= 0
+            if (isHeaderTop && viewTop.getTop() <= 0) {
+                if (positionTop != mHeaderContainer.getHeaderPosition()) {
 
                     // 更新old header记录
                     mHeaderContainer.setOldHeaderPosition(mHeaderContainer.getHeaderPosition());
 
                     // 更新当前header记录
-                    mHeaderContainer.setHeaderPosition(position);
+                    mHeaderContainer.setHeaderPosition(positionTop);
 
                     // 更新map , key:当前header  value: 当前header的前一个header
                     mHeaderContainer.putPreviousValue(mHeaderContainer.getOldHeaderPosition());
@@ -92,13 +61,40 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
                         addHeaderView(holder);
                     }
                 }
-                // 列表向下滚动
-            } else if (!positiveDirection && top >= 0) {
-                Log.e(TAG, "position: " + position);
+            }
+
+            // header bottom边下的view
+            View viewBottom = recyclerView.findChildViewUnder(mHeaderContainer.getMeasuredWidth() * 0.5f, headerHeight);
+            // 获取view 在列表中的位置
+            int positionBottom = recyclerView.getChildAdapterPosition(viewBottom);
+            StickyHeader bottomHeaderItem = mHeaderAdapter.getHeaderItem(positionBottom);
+            boolean isHeaderBottom = null != bottomHeaderItem && bottomHeaderItem.isHeader();
+            int viewBottomTop = null == viewBottom ? 0 : viewBottom.getTop();
+            if (isHeaderBottom && 0 <= viewBottomTop && viewBottomTop <= headerHeight) {
+                mHeaderContainer.setTranslationY(viewBottomTop - headerHeight);
+            } else {
+                mHeaderContainer.setTranslationY(0);
+            }
+
+        } else if (dy <= 0) {
+            int headerHeight = mHeaderContainer.getMeasuredHeight();
+            View viewUnder = null;
+            // dy 等于0时,取mHeaderContainer top边下的item,通常是 删除/添加 itme时触发
+            if (0 == dy) {
+                viewUnder = recyclerView.findChildViewUnder(mHeaderContainer.getMeasuredWidth() * 0.5f, 1);
+            } else {
+                viewUnder = recyclerView.findChildViewUnder(mHeaderContainer.getMeasuredWidth() * 0.5f, headerHeight);
+            }
+            // 获取view 在列表中的位置
+            int position = recyclerView.getChildAdapterPosition(viewUnder);
+            StickyHeader headerItem = mHeaderAdapter.getHeaderItem(position);
+            boolean isHeader = null != headerItem && headerItem.isHeader();
+
+            // header交换时机: viewUnder 是header 并且 viewUnder.getTop() > 0
+            if (isHeader && viewUnder.getTop() > 0) {
                 // 获取当前position header的 前一个header
-                int previousHeaderPosition = mHeaderContainer.getPreviousHeaderPosition(position);
-                Log.e(TAG, "previousHeaderPosition: " + previousHeaderPosition);
-                if (-1 != previousHeaderPosition
+                Integer previousHeaderPosition = mHeaderContainer.getPreviousHeaderPosition(position);
+                if (null != previousHeaderPosition
                         && previousHeaderPosition != mHeaderContainer.getHeaderPosition()) {
 
                     // 更新old header 记录
@@ -113,26 +109,26 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
                     }
                 }
             }
-
-            // 主要解决:mHeaderContainer 未完全初始化就已经添加headerView，此时headerView是没有宽高信息的,需要重绘
-            if (View.VISIBLE == mHeaderContainer.getVisibility()
-                    && (0 == mHeaderContainer.getHeight()
-                    || 0 == mHeaderContainer.getWidth())) {
-                mHeaderContainer.requestLayout();
-            }
-
-            int measuredHeight = mHeaderContainer.getMeasuredHeight();
-            int translationY = top - measuredHeight;
-            if (positiveDirection && 0 <= top && top <= measuredHeight) {
-                mHeaderContainer.setTranslationY(translationY);
-            } else if (!positiveDirection && 0 < top && top < measuredHeight) {
-                mHeaderContainer.setTranslationY(translationY);
+            // header bottom边下的view
+            View viewBottom = recyclerView.findChildViewUnder(mHeaderContainer.getMeasuredWidth() * 0.5f, headerHeight);
+            // 获取view 在列表中的位置
+            int positionBottom = recyclerView.getChildAdapterPosition(viewBottom);
+            StickyHeader bottomHeaderItem = mHeaderAdapter.getHeaderItem(positionBottom);
+            boolean isHeaderBottom = null != bottomHeaderItem && bottomHeaderItem.isHeader();
+            int viewBottomTop = null == viewBottom ? 0 : viewBottom.getTop();
+            if (isHeaderBottom && 0 <= viewBottomTop && viewBottomTop <= headerHeight) {
+                mHeaderContainer.setTranslationY(viewBottomTop - headerHeight);
             } else {
                 mHeaderContainer.setTranslationY(0);
             }
-        } else {
-            mHeaderContainer.setTranslationY(0);
         }
+        // 主要解决:mHeaderContainer 未完全初始化就已经添加headerView，此时headerView是没有宽高信息的,需要重绘
+        if (View.VISIBLE == mHeaderContainer.getVisibility()
+                && (0 == mHeaderContainer.getHeight()
+                || 0 == mHeaderContainer.getWidth())) {
+            mHeaderContainer.requestLayout();
+        }
+
     }
 
     private RecyclerView.ViewHolder getHolder(int headerPosition) {
@@ -165,15 +161,8 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
             return;
         }
 
-        int oldHeaderType = mHeaderAdapter.getHeaderType(mHeaderContainer.getOldHeaderPosition());
-
-        // 删除上一个headerView
-        RecyclerView.ViewHolder oldHolder = mHolderMap.get(oldHeaderType);
-        if (null != oldHolder) {
-            mHeaderContainer.removeView(oldHolder.itemView);
-        }
-
-        mHeaderContainer.addView(holder.itemView);
+        mHeaderContainer.removeHeader();
+        mHeaderContainer.addHeader(holder.itemView);
 
         Log.i(TAG, "add header View");
     }
@@ -182,6 +171,20 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
 
     public <Adapter extends BaseHeaderAdapter> void setHeaderAdapter(Adapter adapter) {
         this.mHeaderAdapter = adapter;
+    }
+
+    public void notifyPreviousRemove(int index) {
+        boolean curHeader = mHeaderContainer.getHeaderPosition() == index;
+
+        mHeaderContainer.notifyHeaderPoisitionRemove(index);
+        mHeaderContainer.notifyPreviousRemove(index);
+
+        if (curHeader) {
+            RecyclerView.ViewHolder holder = getHolder(mHeaderContainer.getHeaderPosition());
+            if (null != holder && null == holder.itemView.getParent()) {
+                addHeaderView(holder);
+            }
+        }
     }
 
     public interface BaseHeaderAdapter<VH extends RecyclerView.ViewHolder> {

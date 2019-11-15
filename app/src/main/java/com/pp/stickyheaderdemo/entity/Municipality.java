@@ -16,7 +16,6 @@ public class Municipality extends StickyHeaderItem {
     public void setName(String name) {
         this.name = name;
     }
-
     @Override
     public int getItemType() {
         return R.layout.rv_item_municipality;

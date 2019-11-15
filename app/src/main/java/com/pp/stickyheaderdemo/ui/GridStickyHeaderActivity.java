@@ -1,10 +1,8 @@
 package com.pp.stickyheaderdemo.ui;
 
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +11,6 @@ import android.widget.Toast;
 
 import com.pp.stickyheaderdemo.R;
 import com.pp.stickyheaderdemo.adapter.BaseMultiItemAdapter;
-import com.pp.stickyheaderdemo.adapter.StickyHeaderItemAdapter;
 import com.pp.stickyheaderdemo.adapter.StickHeaderContainer;
 import com.pp.stickyheaderdemo.adapter.StickyHeaderScrollerListener;
 import com.pp.stickyheaderdemo.entity.City;
@@ -31,12 +28,14 @@ import java.util.List;
  */
 public class GridStickyHeaderActivity extends AppCompatActivity {
 
+    private static final String TAG = "GridStickyHeader";
     private RecyclerView mRecyclerView;
     private BaseMultiItemAdapter<StickyHeaderItem> mAdapter;
     private final List<StickyHeaderItem> dataList = new ArrayList<>();
     private StickHeaderContainer mHeaderContainer;
     private GridLayoutManager mGridLayoutManager;
     private HeaderAdapter mHeaderAdapter;
+    private StickyHeaderScrollerListener mHeaderScrollerListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,28 +65,43 @@ public class GridStickyHeaderActivity extends AppCompatActivity {
     }
 
     private void initData() {
-
-        for (int i = 0; i < 30; i++) {
-            if (i % 3 == 0) {
+        for (int i = 0; i < 250; i++) {
+            if (i % 15 == 0) {
                 Municipality municipality = new Municipality();
                 municipality.setName("Municipality " + i);
                 dataList.add(municipality);
-                for (int j = 0; j < 4; j++) {
-                    City city = new City();
-                    city.setName(municipality.getName() + " city " + j);
-                    dataList.add(city);
-                }
-            } else {
+            } else if (i % 12 == 0) {
                 Province province = new Province();
                 province.setName("Province " + i);
                 dataList.add(province);
-                for (int j = 0; j < 4 * i && j < 20; j++) {
-                    City city = new City();
-                    city.setName(province.getName() + " city " + j);
-                    dataList.add(city);
-                }
+            } else {
+                City city = new City();
+                city.setName(" city " + i);
+                dataList.add(city);
             }
         }
+
+//        for (int i = 0; i < 30; i++) {
+//            if (i % 3 == 0) {
+//                Municipality municipality = new Municipality();
+//                municipality.setName("Municipality " + i);
+//                dataList.add(municipality);
+//                for (int j = 0; j < 4; j++) {
+//                    City city = new City();
+//                    city.setName(municipality.getName() + " city " + j);
+//                    dataList.add(city);
+//                }
+//            } else {
+//                Province province = new Province();
+//                province.setName("Province " + i);
+//                dataList.add(province);
+//                for (int j = 0; j < 4 * i && j < 20; j++) {
+//                    City city = new City();
+//                    city.setName(province.getName() + " city " + j);
+//                    dataList.add(city);
+//                }
+//            }
+//        }
     }
 
     private void setupRecyclerView() {
@@ -101,9 +115,9 @@ public class GridStickyHeaderActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(getAdapter());
 
         // 构建滑动监听器(用于实现粘性头部)
-        StickyHeaderScrollerListener headerScrollerListener = new StickyHeaderScrollerListener(mHeaderContainer);
-        headerScrollerListener.setHeaderAdapter(getHeaderAdapter());
-        mRecyclerView.addOnScrollListener(headerScrollerListener);
+        mHeaderScrollerListener = new StickyHeaderScrollerListener(mHeaderContainer);
+        mHeaderScrollerListener.setHeaderAdapter(getHeaderAdapter());
+        mRecyclerView.addOnScrollListener(mHeaderScrollerListener);
     }
 
     private StickyHeaderScrollerListener.BaseHeaderAdapter getHeaderAdapter() {
@@ -157,7 +171,11 @@ public class GridStickyHeaderActivity extends AppCompatActivity {
                             tv_province.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    Toast.makeText(v.getContext(), province.getName(), Toast.LENGTH_SHORT).show();
+                                    StickyHeaderItem remove = mAdapter.getDataList().remove(1);
+                                    mAdapter.notifyItemRemoved(1);
+                                    mHeaderScrollerListener.notifyPreviousRemove(1);
+//                                    Toast.makeText(v.getContext(), "deleted " + ((City) remove).getName(), Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(v.getContext(), province.getName(), Toast.LENGTH_SHORT).show();
                                 }
                             });
                             break;
@@ -182,7 +200,7 @@ public class GridStickyHeaderActivity extends AppCompatActivity {
                                     int index = mAdapter.getDataList().indexOf(item);
                                     if (mAdapter.getDataList().remove(item)) {
                                         mAdapter.notifyItemRemoved(index);
-                                        mHeaderContainer.notifyPreviousMap(index);
+                                        mHeaderContainer.notifyPreviousRemove(index);
                                         Toast.makeText(v.getContext(), "deleted " + city.getName(), Toast.LENGTH_SHORT).show();
                                     }
                                 }
