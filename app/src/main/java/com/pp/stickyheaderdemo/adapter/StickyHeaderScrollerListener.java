@@ -173,18 +173,42 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
         this.mHeaderAdapter = adapter;
     }
 
+    /**
+     * 删除条目,刷新header
+     *
+     * @param index
+     */
     public void notifyPreviousRemove(int index) {
+        // 是否是当前header
         boolean curHeader = mHeaderContainer.getHeaderPosition() == index;
 
+        // 刷新 当前headerposition
         mHeaderContainer.notifyHeaderPoisitionRemove(index);
+        // 刷新记录的所有header
         mHeaderContainer.notifyPreviousRemove(index);
 
+        // 删除的条目是当前header,需要更新header 条目
         if (curHeader) {
             RecyclerView.ViewHolder holder = getHolder(mHeaderContainer.getHeaderPosition());
             if (null != holder && null == holder.itemView.getParent()) {
                 addHeaderView(holder);
             }
         }
+    }
+
+    /**
+     * 添加条目,刷新header
+     *
+     * @param index
+     */
+    public void notifyPreviousInsert(int index) {
+        StickyHeader headerItem = mHeaderAdapter.getHeaderItem(index);
+        // 是否插入header
+        boolean isInsertHeader = null != headerItem && headerItem.isHeader();
+        // 刷新 当前headerposition
+        mHeaderContainer.notifyHeaderPoisitionInsert(index,isInsertHeader);
+        // 刷新记录的所有header
+        mHeaderContainer.notifyPreviousInsert(index,isInsertHeader);
     }
 
     public interface BaseHeaderAdapter<VH extends RecyclerView.ViewHolder> {

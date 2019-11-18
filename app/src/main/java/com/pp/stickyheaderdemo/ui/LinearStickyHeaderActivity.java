@@ -134,8 +134,6 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
                                 StickyHeaderItem remove = mAdapter.getDataList().remove(1);
                                 mAdapter.notifyItemRemoved(1);
                                 mHeaderScrollerListener.notifyPreviousRemove(1);
-//                                Toast.makeText(v.getContext(), "deleted " + ((City) remove).getName(), Toast.LENGTH_SHORT).show();
-//                                Toast.makeText(v.getContext(), province.getName(), Toast.LENGTH_SHORT).show();
                             }
                         });
                         break;
@@ -146,7 +144,12 @@ public class LinearStickyHeaderActivity extends AppCompatActivity {
                         tv_municipality.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Toast.makeText(v.getContext(), municipality.getName(), Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(v.getContext(), municipality.getName(), Toast.LENGTH_SHORT).show();
+                                City city = new City();
+                                city.setName("new City");
+                                mAdapter.getDataList().add(1,city);
+                                mAdapter.notifyItemInserted(1);
+                                mHeaderScrollerListener.notifyPreviousInsert(1);
                             }
                         });
                         break;

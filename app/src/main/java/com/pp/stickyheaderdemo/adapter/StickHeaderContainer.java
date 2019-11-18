@@ -48,8 +48,12 @@ public class StickHeaderContainer extends FrameLayout {
         mHeaderView.notifyHeaderPoisitionRemove(index);
     }
 
-    public void notifyPreviousInsert(int index) {
-        mHeaderView.notifyPreviousInsert(index);
+    public void notifyPreviousInsert(int index, boolean isInsertHeader) {
+        mHeaderView.notifyPreviousInsert(index, isInsertHeader);
+    }
+
+    public void notifyHeaderPoisitionInsert(int index, boolean isInsertHeader) {
+        mHeaderView.notifyHeaderPoisitionInsert(index, isInsertHeader);
     }
 
     public void addHeader(View header) {
@@ -87,7 +91,7 @@ public class StickHeaderContainer extends FrameLayout {
         //  key:当前header  value: 当前header的前一个header
         private final SparseArray<Integer> headerPositionMap;
 
-        public HeaderView(Context context) {
+        private HeaderView(Context context) {
             super(context);
             headerPositionMap = new SparseArray<>();
         }
@@ -128,7 +132,9 @@ public class StickHeaderContainer extends FrameLayout {
         }
 
         public void notifyHeaderPoisitionRemove(int index) {
-            if (getHeaderPosition() == index) {
+            if (getHeaderPosition() < index) {
+                // do nothing
+            } else if (getHeaderPosition() == index) {
                 setHeaderPosition(headerPositionMap.get(getHeaderPosition()));
             } else if (getHeaderPosition() > index) {
                 setHeaderPosition(getHeaderPosition() - 1);
@@ -140,35 +146,80 @@ public class StickHeaderContainer extends FrameLayout {
             headerPositionMap.clear();
 
             for (int i = 0; i < cloneMap.size(); i++) {
-                int keyPrevious = cloneMap.keyAt(i);
-                Integer value = cloneMap.valueAt(i);
-                if (keyPrevious == index) {
+                int key = cloneMap.keyAt(i);
+                Integer previousKey = cloneMap.valueAt(i);
 
-                    int valueIndex = cloneMap.indexOfValue(keyPrevious);
+                // index 小于 key和previousKey
+                if (index < previousKey && index < key) {
+                    if (previousKey == 0) {
+                        headerPositionMap.put(key - 1, 0);
+                    } else {
+                        headerPositionMap.put(key - 1, previousKey - 1);
+                    }
+                    // index < previousKey
+                } else if (index == previousKey) {
+                    Integer deletedValue = cloneMap.get(previousKey);
+                    headerPositionMap.put(key - 1, deletedValue);
+                    // previousKey < index  < key
+                } else if (previousKey < index && index < key) {
+                    headerPositionMap.put(key - 1, previousKey);
+                } else if (index == key) {
+                    int valueIndex = cloneMap.indexOfValue(key);
                     if (-1 != valueIndex) {
 
                         int keyValue = cloneMap.keyAt(valueIndex);
-                        headerPositionMap.put(keyValue, value);
-                        cloneMap.put(keyValue, value);
+                        headerPositionMap.put(keyValue, previousKey);
+                        cloneMap.put(keyValue, previousKey);
                     }
-                } else if (value == index) {
+                } else if (index > key) {
+                    // do nothing
+                }
+            }
+        }
 
-                    Integer deletedValue = cloneMap.get(value);
-                    headerPositionMap.put(keyPrevious - 1, deletedValue);
-                } else if (value < index && keyPrevious < index) {
-                    headerPositionMap.put(keyPrevious, value);
-                } else if (value > index || keyPrevious > index) {
-                    if (value == 0) {
-                        headerPositionMap.put(keyPrevious - 1, 0);
+        public void notifyPreviousInsert(int index, boolean isInsertHeader) {
+            SparseArray<Integer> cloneMap = headerPositionMap.clone();
+            headerPositionMap.clear();
+
+            for (int i = 0; i < cloneMap.size(); i++) {
+                int key = cloneMap.keyAt(i);
+                Integer previousKey = cloneMap.valueAt(i);
+                if (index > key && index > previousKey) {
+                    headerPositionMap.put(key, previousKey);
+                    if (isInsertHeader) {
+                        headerPositionMap.put(index, key);
+                    }
+                } else if (previousKey < index && index < key) {
+                    if (isInsertHeader) {
+                        headerPositionMap.put(index, previousKey);
+                        headerPositionMap.put(key + 1, index);
                     } else {
-                        headerPositionMap.put(keyPrevious - 1, value - 1);
+                        headerPositionMap.put(key + 1, previousKey);
+                    }
+                } else if (index < previousKey && index < key) {
+                    headerPositionMap.put(key + 1, previousKey + 1);
+                    if (isInsertHeader) {
+                        // 获取 previousKey的前一个header
+                        Integer value = cloneMap.get(previousKey);
+                        headerPositionMap.put(index, value);
+                        headerPositionMap.put(previousKey + 1, index);
                     }
                 }
             }
         }
 
-        public void notifyPreviousInsert(int index) {
-
+        /**
+         * 插入item刷新headerposition
+         *
+         * @param index
+         * @param isInsertHeader
+         */
+        public void notifyHeaderPoisitionInsert(int index, boolean isInsertHeader) {
+            if (index > getHeaderPosition()) {
+                // do nothing
+            } else if (index <= getHeaderPosition()) {
+                setHeaderPosition(getHeaderPosition() + 1);
+            }
         }
     }
 }
