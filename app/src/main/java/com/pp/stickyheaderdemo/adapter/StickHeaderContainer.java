@@ -47,7 +47,7 @@ public class StickHeaderContainer extends ViewGroup {
         }
 
         if (childCount == 0) {
-            setMeasuredDimension(getSuggestedMinimumWidth(), getSuggestedMinimumHeight());
+            setMeasuredDimension(resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec), resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec));
             return;
         }
 
