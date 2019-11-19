@@ -71,9 +71,9 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
             boolean isHeaderBottom = null != bottomHeaderItem && bottomHeaderItem.isHeader();
             int viewBottomTop = null == viewBottom ? 0 : viewBottom.getTop();
             if (isHeaderBottom && 0 <= viewBottomTop && viewBottomTop <= headerHeight) {
-                mHeaderContainer.setTranslationY(viewBottomTop - headerHeight);
+                mHeaderContainer.setHeaderTranslationY(viewBottomTop - headerHeight);
             } else {
-                mHeaderContainer.setTranslationY(0);
+                mHeaderContainer.setHeaderTranslationY(0);
             }
 
         } else if (dy <= 0) {
@@ -117,9 +117,9 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
             boolean isHeaderBottom = null != bottomHeaderItem && bottomHeaderItem.isHeader();
             int viewBottomTop = null == viewBottom ? 0 : viewBottom.getTop();
             if (isHeaderBottom && 0 <= viewBottomTop && viewBottomTop <= headerHeight) {
-                mHeaderContainer.setTranslationY(viewBottomTop - headerHeight);
+                mHeaderContainer.setHeaderTranslationY(viewBottomTop - headerHeight);
             } else {
-                mHeaderContainer.setTranslationY(0);
+                mHeaderContainer.setHeaderTranslationY(0);
             }
         }
         // 主要解决:mHeaderContainer 未完全初始化就已经添加headerView，此时headerView是没有宽高信息的,需要重绘
@@ -206,9 +206,9 @@ public class StickyHeaderScrollerListener extends RecyclerView.OnScrollListener 
         // 是否插入header
         boolean isInsertHeader = null != headerItem && headerItem.isHeader();
         // 刷新 当前headerposition
-        mHeaderContainer.notifyHeaderPoisitionInsert(index,isInsertHeader);
+        mHeaderContainer.notifyHeaderPoisitionInsert(index, isInsertHeader);
         // 刷新记录的所有header
-        mHeaderContainer.notifyPreviousInsert(index,isInsertHeader);
+        mHeaderContainer.notifyPreviousInsert(index, isInsertHeader);
     }
 
     public interface BaseHeaderAdapter<VH extends RecyclerView.ViewHolder> {

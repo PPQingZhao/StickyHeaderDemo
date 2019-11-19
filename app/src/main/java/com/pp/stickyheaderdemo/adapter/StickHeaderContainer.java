@@ -3,22 +3,18 @@ package com.pp.stickyheaderdemo.adapter;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.ArrayMap;
-import android.util.ArraySet;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import java.util.HashSet;
 
 /**
  * @author qing
  * 粘性头部
  */
-public class StickHeaderContainer extends FrameLayout {
+public class StickHeaderContainer extends ViewGroup {
     private final HeaderView mHeaderView;
 
     public StickHeaderContainer(@NonNull Context context) {
@@ -32,7 +28,84 @@ public class StickHeaderContainer extends FrameLayout {
     public StickHeaderContainer(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mHeaderView = new HeaderView(getContext());
-        mHeaderView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        mHeaderView.setLayoutParams(new ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+    }
+
+    /**
+     * 测量设置宽高信息
+     * <p>
+     * 这里我们希望StickHeaderContainer只需要包裹住HeaderView
+     *
+     * @param widthMeasureSpec
+     * @param heightMeasureSpec
+     */
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int childCount = getChildCount();
+        if (childCount > 1) {
+            throw new IllegalArgumentException("StickHeaderContainer only allows one child.");
+        }
+
+        if (childCount == 0) {
+            setMeasuredDimension(getSuggestedMinimumWidth(), getSuggestedMinimumHeight());
+            return;
+        }
+
+        // 获取child
+        View child = getChildAt(0);
+        //  测量单个child(考虑外边距)
+        measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
+
+        // 获取child 的布局参数(此时包含外边距)
+        MarginLayoutParams layoutParams = (MarginLayoutParams) child.getLayoutParams();
+
+        // 期望的宽高 (取child最大宽高)
+        int desireWidth = child.getMeasuredWidth() + layoutParams.leftMargin + layoutParams.rightMargin;
+        int desireHeight = child.getHeight() + layoutParams.topMargin + layoutParams.bottomMargin;
+
+        // 考虑本身内边距
+        desireWidth += getPaddingLeft() + getPaddingRight();
+        desireHeight += getPaddingTop() + getPaddingBottom();
+
+        // 比较建议最小值和期望值,并取最大值
+        desireWidth = Math.max(desireWidth, getSuggestedMinimumWidth());
+        desireHeight = Math.max(desireHeight, getSuggestedMinimumHeight());
+
+        // 设置最终测量值 (view.getMeasureWidth()和view.getMeasureHeight()的值就是从这里确定的)
+        setMeasuredDimension(resolveSize(desireWidth, widthMeasureSpec), resolveSize(desireHeight, heightMeasureSpec));
+
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        if (getChildCount() == 0) {
+            return;
+        }
+
+        View child = getChildAt(0);
+        MarginLayoutParams layoutParams = (MarginLayoutParams) child.getLayoutParams();
+
+        int cLeft = getPaddingLeft() + layoutParams.leftMargin;
+        int cTop = getPaddingTop() + layoutParams.topMargin;
+        int cRight = cLeft + child.getMeasuredWidth();
+        int cBottom = cTop + child.getMeasuredHeight();
+        /* 设置child在parent中的位置
+            分别保存在child的  mLeft,mTop,mBottom,mRight中，view.getWidth()的值等于 mRight - mLeft，
+            所以在执行完view.layout()后,view.getWidth()和view.getHeight()；才有值
+            */
+        child.layout(cLeft, cTop, cRight, cBottom);
+
+    }
+
+    /**
+     * 重写构造默认布局参数方法
+     * 因为在onMeasure()中使用了 measureChildWithMargins()，这要求view的布局参数是MarginLayoutParams
+     *
+     * @return
+     */
+    @Override
+    protected LayoutParams generateDefaultLayoutParams() {
+        return new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     }
 
     public void putPreviousValue(int previousPosition) {
@@ -85,6 +158,14 @@ public class StickHeaderContainer extends FrameLayout {
 
     public Integer getPreviousHeaderPosition(int headerPosition) {
         return mHeaderView.getPreviousHeaderPosition(headerPosition);
+    }
+
+    public void setHeaderTranslationY(float translationY) {
+        mHeaderView.setTranslationY(translationY);
+    }
+
+    public void setHeaderTranslationX(float translationX) {
+        mHeaderView.setTranslationX(translationX);
     }
 
     static class HeaderView extends FrameLayout {
